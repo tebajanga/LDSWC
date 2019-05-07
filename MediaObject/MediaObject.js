@@ -22,22 +22,6 @@ export default class MediaObject extends LitElement {
 			 */
 			customTag: { type: String },
 			/**
-			 * sets a figure on the left side of the media object
-			 */
-			figureLeft: { type: String },
-			/**
-			 * sets a figure on the right side of the media object
-			 */
-			figureRight: { type: String },
-			/**
-			 * Function to render figureLeft. Receives (elem, classes) as arguments
-			 */
-			renderFigureLeft: { type: String },
-			/**
-			 * Function to render figureRight. Receives (elem, classes) as arguments
-			 */
-			renderFigureRight: { type: String },
-			/**
 			 * renders a responsive variant of the MediaObject
 			 */
 			responsive: { type: Boolean },
@@ -53,6 +37,10 @@ export default class MediaObject extends LitElement {
 			 * title is necessary if truncate is used
 			 */
 			title: { type: String },
+			/**
+			 *  Figure position. Can be "left" or "right".
+			 */
+			figurePosition: { type: String },
 		}
 	}
 
@@ -62,27 +50,28 @@ export default class MediaObject extends LitElement {
 		this.className = null;
 		this.center = true;
 		this.customTag = null;
-		this.figureLeft = null;
-		this.figureRight = null;
 		this.responsive = null;
 		this.size = null;
 		this.truncate = null;
 		this.title = null;
-		this.renderFigureLeft = null;
-		this.renderFigureRight = null;
+		this.figurePosition = null;
   }
   
- 	renderFigure(figure, classes) {
-		return html`
-<div class=${joinClassNames(classes)}>${figure}</div>`
+ 	renderFigure(figurePosition, figureClasses, bodyClasses) {
+		if (figurePosition == 'right') {
+			return html`
+			<div class=${joinClassNames(bodyClasses)} title=${this.title}><slot name="body"></slot></div>
+			<div class=${joinClassNames(figureClasses)}><slot name="figure"></slot></div>`
+		} else {
+			return html`
+			<div class=${joinClassNames(figureClasses)}><slot name="figure"></slot></div>
+			<div class=${joinClassNames(bodyClasses)} title=${this.title}><slot name="body"></slot></div>`
+		}
 	}
 
 	render() {
 		//const otherattrs = getRestOfAttribs(this.attributes, this.constructor.properties);
 		const Tag = this.customTag || 'div';
-		
-		const figureLeftRenderer = this.renderFigureLeft || this.renderFigure;
-		const figureRightRenderer = this.renderFigureRight || this.renderFigure;
 		
 		const sldsClasses = [
 			'slds-media',
@@ -97,30 +86,20 @@ export default class MediaObject extends LitElement {
 			{ 'slds--truncate': this.truncate },
 			this.bodyClassName
 		];
-		
-		const leftFigureClasses = [
-			'slds-media__figure'
-		];
-		
-		const rightFigureClasses = [
+
+		const figureClasses = this.figurePosition == 'right' ? [
 			'slds-media__figure',
 			'slds-media__figure_reverse'
+		] : [
+			'slds-media__figure'
 		];
 
+		
 		return html`
 <style>
 @import '${ldswcconfig.ldsBasePath}/styles/salesforce-lightning-design-system.css';
 </style>
-<div class=${joinClassNames(sldsClasses)}>
-  ${this.figureLeft && figureLeftRenderer(this.figureLeft, leftFigureClasses)}
-  <div
-    class=${joinClassNames(bodyClasses)}
-    title=${this.title}
-  >
-    <slot></slot>
-  </div>
-  ${this.figureRight && figureRightRenderer(this.figureRight, rightFigureClasses)}
-</div>
+<div class=${joinClassNames(sldsClasses)}>${this.renderFigure(this.figurePosition, figureClasses, bodyClasses)}</div>
 `;
 	}
 }
